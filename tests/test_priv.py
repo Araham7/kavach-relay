@@ -1,0 +1,15 @@
+from playwright.sync_api import sync_playwright
+def log(*a): print(*a, flush=True)
+with sync_playwright() as p:
+    b=p.chromium.launch(executable_path="/usr/bin/google-chrome")
+    pg=b.new_context(viewport={"width":1100,"height":800},bypass_csp=True).new_page(); pg.on("pageerror",lambda e:log("ERR",e))
+    pg.goto("http://localhost:8099/?test=1"); pg.wait_for_timeout(500)
+    pg.fill("#pin","123456"); pg.fill("#pin2","123456"); pg.click("#pinBtn"); pg.wait_for_selector("#recOk"); pg.click("#recOk")
+    pg.wait_for_timeout(8000)
+    log("without key -> connected:", pg.evaluate("document.getElementById('net').classList.contains('on')"), "| hint:", pg.get_attribute("#net","title"))
+    pg.click("#setBtn"); pg.click("[data-tab='security']"); pg.fill("#rkIn","WRONG"); pg.click("#rkSave"); pg.wait_for_timeout(6000)
+    log("wrong key -> connected:", pg.evaluate("document.getElementById('net').classList.contains('on')"))
+    pg.fill("#rkIn","my-secret-key-123"); pg.click("#rkSave"); pg.wait_for_selector("#net.on", state="attached", timeout=20000)
+    log("right key -> connected: True")
+    pg.click("#mClose"); pg.click("#lockBtn"); pg.fill("#pin","123456"); pg.click("#pinBtn"); pg.wait_for_selector("#net.on", state="attached", timeout=20000); log("after re-unlock key remembered -> connected: True")
+    b.close()

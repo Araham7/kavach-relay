@@ -50,7 +50,7 @@ const CFG = {
 
 /* ---------------- static files ---------------- */
 const PUB = path.join(__dirname, 'public');
-const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.json': 'application/json', '.webmanifest': 'application/manifest+json' };
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2', '.txt': 'text/plain; charset=utf-8', '.md': 'text/plain; charset=utf-8' };
 const CSP = [
   "default-src 'none'", "script-src 'self'", "style-src 'self'", "img-src 'self' data: blob:",
   "media-src 'self' blob:", "connect-src 'self' wss: ws:", "font-src 'self'", "manifest-src 'self'",
@@ -78,6 +78,7 @@ function onRequest(req, res) {
   if (!file.startsWith(PUB + path.sep)) { res.writeHead(403); return res.end(); }
   fs.stat(file, (err, st) => {
     if (err || !st.isFile()) { res.writeHead(404); return res.end('Not found'); }
+    if (file.includes(path.sep + 'vendor' + path.sep + 'fonts' + path.sep)) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', 'Content-Length': st.size });
     if (req.method === 'HEAD') return res.end();
     fs.createReadStream(file).pipe(res);

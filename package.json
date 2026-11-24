@@ -5,11 +5,15 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "ALLOW_INSECURE=1 HOST=127.0.0.1 PORT=8080 node server.js"
+    "dev": "ALLOW_INSECURE=1 HOST=127.0.0.1 PORT=8080 node server.js",
+    "update-emoji": "npm i --no-save unicode-emoji-json@latest && node tools/update-emoji.js"
   },
   "license": "UNLICENSED",
   "dependencies": {
     "ws": "^8.23.0"
   },
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "unicode-emoji-json": "^0.9.0"
+  }
 }

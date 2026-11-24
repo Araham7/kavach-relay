@@ -170,6 +170,7 @@ function applyTheme() {
   const v = { '--bg': t[1], '--panel': t[2], '--panel2': t[3], '--text': t[4], '--muted': t[5], '--border': t[6], '--accent': acc, '--soft': hexRgba(acc, t[11] ? 0.18 : 0.12), '--on': on, '--bin': t[8], '--bout': set.accent ? acc : t[9], '--bouttx': set.accent ? on : t[10] };
   for (const k in v) st.setProperty(k, v[k]);
   document.documentElement.style.colorScheme = t[11] ? 'dark' : 'light';
+  document.documentElement.classList.toggle('notoemoji', !!set.notoEmoji);
 }
 
 /* =================== encrypted vault (v3) =================== */
@@ -178,7 +179,7 @@ function applyTheme() {
  *  wd/dct are random junk when no duress PIN is set => a forensic look cannot tell. */
 const VKEY = 'kavach_vault_v1', FKEY = 'kavach_fails';
 let vaultKey = null, ST = null, slot = 'real';
-const defState = () => ({ v: 1, contacts: {}, set: { theme: 0, accent: '', receipts: true, typing: true, relayOnly: true, wipe10: true, autoLock: 1, relayKey: '', rotate: true, ssAlert: true, stripMeta: true, disguise: false, adult: false, gender: '', blurStrangers: false } });
+const defState = () => ({ v: 1, contacts: {}, set: { theme: 0, accent: '', receipts: true, typing: true, relayOnly: true, wipe10: true, autoLock: 1, relayKey: '', rotate: true, ssAlert: true, stripMeta: true, disguise: false, emojiVer: 15.1, notoEmoji: false, adult: false, gender: '', blurStrangers: false } });
 async function pinKey(pin, salt) {
   const base = await S.importKey('raw', te.encode(pin), 'PBKDF2', false, ['deriveKey']);
   return S.deriveKey({ name: 'PBKDF2', salt, iterations: 310000, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
@@ -1060,7 +1061,15 @@ $('recX').onclick = () => stopVoice(true);
 let EMOJI = null;
 const TONES = ['', '\u{1F3FB}', '\u{1F3FC}', '\u{1F3FD}', '\u{1F3FE}', '\u{1F3FF}'];
 const GROUP_ICON = ['😀', '👋', '🐶', '🍔', '✈️', '⚽', '💡', '❤️', '🏳️'];
-async function loadEmoji() { if (!EMOJI) { const r = await fetch('vendor/emoji.json'); EMOJI = await r.json(); for (const g of EMOJI) for (const it of g[1]) it[3] = it[1].toLowerCase(); } return EMOJI; }
+async function loadEmoji() {
+  if (!EMOJI) {
+    const r = await fetch('vendor/emoji.json', { cache: 'no-cache' }); EMOJI = await r.json();
+    for (const g of EMOJI) for (const it of g[1]) { if (typeof it[3] !== 'number') it[3] = 0; it[4] = it[1].toLowerCase(); }   // [emoji, name, tone, version, lowercase]
+  }
+  return EMOJI;
+}
+const emojiMaxVer = () => +(ST && ST.set.emojiVer) || 15.1;
+const allowedEmoji = (it) => it[3] <= emojiMaxVer();
 function toned(e, tone, ok) {
   if (!tone || !ok) return e;
   const ch = [...e]; const rest = ch.slice(1); if (rest[0] === '\uFE0F') rest.shift();
@@ -1074,13 +1083,13 @@ async function emojiGrid(box, onPick, compact) {
   const draw = () => {
     const tone = ST.emo.tone || '';
     let list;
-    if (q) { const k = q.toLowerCase(); list = []; for (const g of data) for (const it of g[1]) if (it[3].includes(k)) list.push(it); list = list.slice(0, 300); }
+    if (q) { const k = q.toLowerCase(); list = []; for (const g of data) for (const it of g[1]) if (allowedEmoji(it) && it[4].includes(k)) list.push(it); list = list.slice(0, 300); }
     else if (gi < 0) list = ST.emo.recent.map((e) => [e, '', 0]);
-    else list = data[gi][1];
+    else list = data[gi][1].filter(allowedEmoji);
     box.querySelector('.egrid').innerHTML = list.length ? list.map((it) => { const e = toned(it[0], tone, it[2]); return `<button data-e="${esc(e)}" title="${esc(it[1])}">${e}</button>`; }).join('') : '<p class="muted small center">No emoji found</p>';
     box.querySelectorAll('.etabs button[data-gi]').forEach((b) => b.classList.toggle('act', +b.dataset.gi === gi && !q));
   };
-  box.innerHTML = `<div class="ehead"><input class="esearch" placeholder="🔍 Search ${data.reduce((n, g) => n + g[1].length, 0)} emoji" autocomplete="off"><div class="tones">${TONES.map((t, i) => `<button data-tone="${i}" class="${(ST.emo.tone || '') === t ? 'act' : ''}">${i ? '👋' + t : '👋'}</button>`).join('')}</div></div>
+  box.innerHTML = `<div class="ehead"><input class="esearch" placeholder="🔍 Search ${data.reduce((n, g) => n + g[1].filter(allowedEmoji).length, 0)} emoji" autocomplete="off"><div class="tones">${TONES.map((t, i) => `<button data-tone="${i}" class="${(ST.emo.tone || '') === t ? 'act' : ''}">${i ? '👋' + t : '👋'}</button>`).join('')}</div></div>
     <div class="etabs">${ST.emo.recent.length ? '<button data-gi="-1">🕘</button>' : ''}${data.map((g, i) => `<button data-gi="${i}" title="${esc(g[0])}">${GROUP_ICON[i] || '•'}</button>`).join('')}</div>
     <div class="egrid${compact ? ' compact' : ''}"></div>`;
   box.querySelector('.esearch').oninput = (e) => { q = e.target.value.trim(); draw(); };
@@ -1123,7 +1132,9 @@ async function normaliseSticker(file) {
 async function emojiSticker(e) {                                    // any emoji -> big 512px sticker
   const cv = document.createElement('canvas'); cv.width = cv.height = 512;
   const x = cv.getContext('2d'); x.textAlign = 'center'; x.textBaseline = 'middle';
-  x.font = '400px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; x.fillText(e, 256, 280);
+  const fam = (ST.set.notoEmoji ? 'KavachEmoji,' : '') + '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+  if (ST.set.notoEmoji && document.fonts) await document.fonts.load('400px KavachEmoji', e).catch(() => {});
+  x.font = '400px ' + fam; x.fillText(e, 256, 280);
   const blob = await new Promise((r) => cv.toBlob(r, 'image/png'));
   return new Uint8Array(await blob.arrayBuffer());
 }
@@ -1404,7 +1415,10 @@ function openSettings() {
   if (setTab === 'look') {
     h += `<div class="grp">Themes (${THEMES.length})</div><div class="themes">${THEMES.map((t, i) => `<button class="th${+ST.set.theme === i ? ' act' : ''}" data-th="${i}"><i class="b1"></i><i class="b2"></i><span>${t[0]}</span></button>`).join('')}</div>
       <div class="grp">Accent colour</div><div class="swatches"><button class="${!ST.set.accent ? 'act' : ''} rainbow" data-ac="" aria-label="Theme default"></button>${ACCENTS.map((a) => `<button class="${ST.set.accent === a ? 'act' : ''}" data-ac="${a}" aria-label="${a}"></button>`).join('')}</div>
-      <div class="row2"><button class="btn ghost" id="shuf">🎲 Surprise me</button></div>`;
+      <div class="row2"><button class="btn ghost" id="shuf">🎲 Surprise me</button></div>
+      <div class="grp">Emoji</div>
+      <div class="opt"><div class="tx"><b>Newest emoji in picker</b><small>Very new emoji may show as ☐ on older phones unless the font below is on</small></div><select id="evSel">${[[13.1, 'Emoji 13.1 (2020)'], [14, 'Emoji 14 (2021)'], [15, 'Emoji 15 (2022)'], [15.1, 'Emoji 15.1 (2023)'], [16, 'Emoji 16 (2024)'], [17, 'Emoji 17 (2025)'], [99, 'All available']].map(([v, n]) => `<option value="${v}" ${emojiMaxVer() === v ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
+      ${'<div class="opt"><div class="tx"><b>Same emoji on every phone</b><small>Uses the bundled Noto Color Emoji font (Google, open-source). Shows new emoji even on old phones. Downloads ~1–2 MB from your own server the first time.</small></div><button class="sw ' + (ST.set.notoEmoji ? 'on' : '') + '" data-k="notoEmoji"></button></div>'}`;
   } else if (setTab === 'privacy') {
     h += sw('receipts', 'Read receipts', 'Send delivered/read ticks (encrypted)') + sw('typing', 'Typing indicator', 'Let others see when you type') +
       sw('relayOnly', 'Hide my IP in calls', 'Force calls through TURN relay when available') + sw('stripMeta', 'Strip photo metadata', 'Removes EXIF, GPS location & camera info before sending') +
@@ -1435,9 +1449,11 @@ function openSettings() {
     b.onclick = () => { ST.set.theme = +b.dataset.th; applyTheme(); save(); openSettings(); };
   });
   B.querySelectorAll('[data-ac]').forEach((b) => { if (b.dataset.ac) b.style.background = b.dataset.ac; b.onclick = () => { ST.set.accent = b.dataset.ac; applyTheme(); save(); openSettings(); }; });
+  if ($('evSel')) $('evSel').onchange = () => { ST.set.emojiVer = +$('evSel').value; save(); toast('Emoji picker updated'); };
   if ($('shuf')) $('shuf').onclick = () => { ST.set.theme = rnd(1)[0] % THEMES.length; ST.set.accent = rnd(1)[0] % 3 === 0 ? ACCENTS[rnd(1)[0] % ACCENTS.length] : ''; applyTheme(); save(); openSettings(); toast('✨ ' + THEMES[ST.set.theme][0]); };
   B.querySelectorAll('[data-k]').forEach((b) => { b.onclick = () => {
     const k = b.dataset.k; ST.set[k] = !ST.set[k]; b.className = 'sw' + (ST.set[k] ? ' on' : '');
+    if (k === 'notoEmoji') applyTheme();
     if (k === 'wipe10') localStorage.setItem('kavach_w10', ST.set[k] ? '1' : '0');
     if (k === 'disguise') { if (ST.set[k]) localStorage.setItem('kavach_dg', '1'); else localStorage.removeItem('kavach_dg'); if (ST.set[k]) toast('Next lock shows a calculator. Type PIN then = to open.'); }
     save();
