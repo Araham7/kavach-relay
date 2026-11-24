@@ -1,0 +1,52 @@
+{
+  "name": "kavach-desktop",
+  "productName": "Kavach",
+  "version": "1.0.0",
+  "description": "Kavach private messenger (desktop)",
+  "author": {
+    "name": "Araham",
+    "email": "kavach@localhost"
+  },
+  "homepage": "https://localhost/kavach",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "build:linux": "electron-builder --linux AppImage deb",
+    "build:win": "electron-builder --win nsis",
+    "build:mac": "electron-builder --mac dmg"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.araham.kavach",
+    "productName": "Kavach",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "setup.html",
+      "setup-preload.js",
+      "build/icon.png"
+    ],
+    "linux": {
+      "category": "Network",
+      "maintainer": "Araham <kavach@localhost>"
+    },
+    "win": {
+      "artifactName": "Kavach-Setup-${version}.exe"
+    },
+    "mac": {
+      "category": "public.app-category.social-networking",
+      "extendInfo": {
+        "NSCameraUsageDescription": "Kavach needs the camera for video calls.",
+        "NSMicrophoneUsageDescription": "Kavach needs the microphone for calls and voice notes."
+      }
+    },
+    "publish": null
+  }
+}

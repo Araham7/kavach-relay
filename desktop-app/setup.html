@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
+<title>Kavach — server</title>
+<style>
+body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;background:#070027;color:#e8ecf5;font:16px system-ui,sans-serif}
+.box{width:min(420px,90vw);background:#151b2b;border:1px solid #243049;border-radius:16px;padding:28px}
+h1{margin:0 0 6px;font-size:22px}p{color:#8a93a8;margin:0 0 18px;line-height:1.4}
+input{width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid #243049;background:#0e1320;color:#fff;font-size:15px}
+button{margin-top:14px;width:100%;padding:12px;border:0;border-radius:10px;background:#5b8cff;color:#fff;font-size:15px;cursor:pointer}
+#err{color:#ef4f5f;min-height:20px;margin-top:10px;font-size:14px}
+</style></head>
+<body><div class="box">
+<h1>Kavach server</h1>
+<p>Type the address of your Kavach server, for example https://192.168.1.50:8443. If it does not open, check that this computer is on the same Wi-Fi and trusts the server certificate.</p>
+<input id="u" placeholder="https://192.168.1.50:8443" autofocus>
+<button id="go">Connect</button>
+<div id="err"></div>
+</div>
+<script>
+const u = document.getElementById('u'), err = document.getElementById('err');
+u.value = new URLSearchParams(location.search).get('url') || '';
+async function go() { err.textContent = await window.kavachDesktop.saveUrl(u.value.trim()); }
+document.getElementById('go').onclick = go;
+u.onkeydown = (e) => { if (e.key === 'Enter') go(); };
+</script>
+</body></html>
