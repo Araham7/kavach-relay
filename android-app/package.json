@@ -1,0 +1,11 @@
+{
+  "name": "kavach-android",
+  "private": true,
+  "description": "Android test APK for Kavach (Capacitor wrapper that opens your Kavach server)",
+  "devDependencies": {
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^6.2.0",
+    "@capacitor/core": "^6.2.0"
+  }
+}
