@@ -1,0 +1,29 @@
+[Unit]
+Description=Kavach blind relay
+After=network-online.target
+
+[Service]
+EnvironmentFile=/etc/kavach/kavach.env
+WorkingDirectory=/opt/kavach
+ExecStart=/usr/bin/node /opt/kavach/server.js
+User=kavach
+Group=kavach
+Restart=always
+# hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=no
+ReadOnlyPaths=/opt/kavach /etc/kavach
+StandardOutput=null
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

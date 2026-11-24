@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="dark light">
+<title>Kavach</title>
+<link rel="icon" id="favicon" href="data:,">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<!-- ============ LOCK / VAULT ============ -->
+<div id="lock" class="screen hidden">
+  <div class="lockbox">
+    <div class="logo" aria-hidden="true">🛡️</div>
+    <h1>Kavach</h1>
+    <p id="lockMsg" class="muted">Enter your PIN</p>
+    <form id="pinForm" autocomplete="off">
+      <input id="rec" class="hidden" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX-XXXX" aria-label="Recovery key">
+      <input id="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="32" placeholder="PIN" aria-label="PIN">
+      <input id="pin2" class="hidden" type="password" inputmode="numeric" autocomplete="off" maxlength="32" placeholder="Confirm PIN" aria-label="Confirm PIN">
+      <button id="pinBtn" class="btn wide" type="submit">Unlock</button>
+    </form>
+    <p id="lockHint" class="small muted"></p>
+    <button type="button" id="forgotBtn" class="linkbtn hidden">Forgot PIN? Use recovery key</button>
+  </div>
+</div>
+
+<!-- ============ CALCULATOR DISGUISE ============ -->
+<div id="calc" class="screen hidden" aria-label="Calculator">
+  <div class="calcbox">
+    <div id="calcDisp" class="cdisp">0</div>
+    <div class="ckeys" id="calcKeys">
+      <button data-k="C" class="fn">C</button><button data-k="(" class="fn">(</button><button data-k=")" class="fn">)</button><button data-k="/" class="op">÷</button>
+      <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button data-k="*" class="op">×</button>
+      <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button data-k="-" class="op">−</button>
+      <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button data-k="+" class="op">+</button>
+      <button data-k="B" class="fn">⌫</button><button data-k="0">0</button><button data-k=".">.</button><button data-k="=" class="op eq">=</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app" class="hidden">
+  <aside id="side">
+    <header class="shd">
+      <div class="brand">🛡️ Kavach</div>
+      <span id="net" class="net" title="Relay connection"></span>
+      <button id="lockBtn" class="ib" aria-label="Lock">🔒</button>
+      <button id="setBtn" class="ib" aria-label="Settings">⚙️</button>
+    </header>
+    <div class="acts">
+      <button id="invBtn" class="btn">＋ QR</button>
+      <button id="joinBtn" class="btn ghost">⇢ Join</button>
+      <button id="roomBtn" class="btn ghost">🔢 Code</button>
+    </div>
+    <div class="acts"><button id="randBtn" class="btn randbtn">💞 Random Connect <small>18+</small></button></div>
+    <div class="strip">🔐 No accounts · no user IDs · no phone numbers</div>
+    <div id="list" role="list"></div>
+  </aside>
+
+  <main id="main">
+    <div id="empty">
+      <div class="big">🛡️</div>
+      <h2>Private by design</h2>
+      <p class="muted"><b>QR</b>: show a one-time QR · <b>Join</b>: scan someone's QR · <b>Code</b>: both type the same secret words. Nothing about you is shared.</p>
+    </div>
+    <section id="chat" class="hidden">
+      <header class="chead">
+        <button id="back" class="ib" aria-label="Back">←</button>
+        <div id="cAv" class="av"></div>
+        <button id="cWho" class="who"><b id="cName"></b><small id="cSub"></small></button>
+        <button id="rNext" class="ib hidden" aria-label="Next stranger" title="Next stranger">⏭</button>
+        <button id="rRep" class="ib hidden" aria-label="Report" title="Report & leave">🚩</button>
+        <button id="aCall" class="ib" aria-label="Voice call">📞</button>
+        <button id="vCall" class="ib" aria-label="Video call">🎥</button>
+        <button id="cMenu" class="ib" aria-label="Chat menu">⋮</button>
+      </header>
+      <div id="msgs" role="log" aria-live="polite"></div>
+      <div id="typing" class="hidden">typing…</div>
+      <div id="replyBar" class="replybar hidden"><div><b id="rbWho"></b><span id="rbTx"></span></div><button id="rbX" class="ib" aria-label="Cancel reply">✕</button></div>
+      <div id="emoPanel" class="emopanel hidden"></div>
+      <div id="recBar" class="recbar hidden"><span class="rdot"></span><span id="recT">0:00</span><span class="grow"></span><button id="recX" class="ib" aria-label="Cancel recording">🗑️</button><button id="recSend" class="send" aria-label="Send voice note">➤</button></div>
+      <form id="composer" autocomplete="off">
+        <button id="attBtn" class="ib" type="button" aria-label="Attach file">📎</button>
+        <select id="tmr" aria-label="Disappearing timer" title="Disappearing timer">
+          <option value="0">⏱</option><option value="30">30s</option><option value="300">5m</option><option value="3600">1h</option><option value="86400">1d</option><option value="604800">1w</option>
+        </select>
+        <button id="emoBtn" class="ib" type="button" aria-label="Emoji and stickers">😊</button>
+        <textarea id="input" rows="1" placeholder="Message 🔐" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Message"></textarea>
+        <button id="voBtn" class="ib" type="button" aria-label="View once" title="View once">👁</button>
+        <button id="micBtn" class="send" type="button" aria-label="Record voice note">🎤</button>
+        <button id="send" class="send hidden" type="submit" aria-label="Send">➤</button>
+      </form>
+      <input id="fileIn" type="file" class="hidden" multiple>
+      <input id="stkIn" type="file" class="hidden" multiple accept=".webp,.png,.gif,.apng,.jpg,.jpeg,.webm,.tgs,.json,image/*,video/webm">
+    </section>
+  </main>
+</div>
+
+<!-- ============ MODAL ============ -->
+<div id="modal" class="hidden">
+  <div class="sheet" role="dialog" aria-modal="true">
+    <div class="mhead"><h3 id="mTitle"></h3><button id="mClose" class="ib" aria-label="Close">✕</button></div>
+    <div id="mBody"></div>
+  </div>
+</div>
+
+<!-- ============ CALL ============ -->
+<div id="call" class="hidden">
+  <video id="remoteV" autoplay playsinline></video>
+  <video id="localV" autoplay playsinline muted></video>
+  <div class="cinfo">
+    <div id="callAv" class="av big"></div>
+    <h2 id="callName"></h2>
+    <div id="callState" class="muted"></div>
+    <div id="callSas" class="sas"></div>
+    <div class="small muted">Compare emoji with the other person · E2EE (DTLS-SRTP)</div>
+  </div>
+  <div class="cbtns" id="ringBtns">
+    <button id="accA" class="cb ok" aria-label="Accept voice">📞</button>
+    <button id="accV" class="cb ok" aria-label="Accept video">🎥</button>
+    <button id="decl" class="cb end" aria-label="Decline">✕</button>
+  </div>
+  <div class="cbtns hidden" id="inBtns">
+    <button id="mute" class="cb" aria-label="Mute">🎙️</button>
+    <button id="cam" class="cb" aria-label="Camera">📷</button>
+    <button id="hang" class="cb end" aria-label="End call">✕</button>
+  </div>
+</div>
+
+<div id="viewer" class="hidden"><img id="viewImg" alt=""><button id="viewX" class="ib" aria-label="Close">✕</button></div>
+<div id="vo" class="hidden"><div id="voMedia"></div><div id="voInfo"></div><button id="voX" class="ib" aria-label="Close">✕</button></div>
+<div id="toast" role="status"></div>
+<div id="shield" class="hidden">🛡️</div>
+
+<script src="vendor/qrcode.js"></script>
+<script src="vendor/jsQR.js"></script>
+<script src="vendor/lottie_light.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
