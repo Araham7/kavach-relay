@@ -1659,7 +1659,7 @@ function showLockScreen() {
   const dg = localStorage.getItem('kavach_dg') === '1' && !!localStorage.getItem(VKEY);
   document.body.classList.toggle('dg', dg);
   document.title = dg ? 'Calculator' : 'Kavach';
-  $('favicon').href = dg ? 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#333"/><text x="32" y="44" font-size="34" text-anchor="middle" fill="#ff9f0a">=</text></svg>') : 'data:,';
+  $('favicon').href = dg ? 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#333"/><text x="32" y="44" font-size="34" text-anchor="middle" fill="#ff9f0a">=</text></svg>') : 'icons/icon-32.png';
   $('calc').classList.toggle('hidden', !dg);
   $('lock').classList.toggle('hidden', dg);
   if (dg) { calcExpr = ''; calcShow('0'); } else setupLock();
@@ -1691,7 +1691,7 @@ async function failedAttempt(what) {
 }
 function afterUnlock(code) {
   $('lock').classList.add('hidden'); $('calc').classList.add('hidden'); $('app').classList.remove('hidden');
-  document.body.classList.remove('dg'); document.title = 'Kavach'; $('favicon').href = 'data:,';
+  document.body.classList.remove('dg'); document.title = 'Kavach'; $('favicon').href = 'icons/icon-32.png';
   if (ST.set.disguise) localStorage.setItem('kavach_dg', '1'); else localStorage.removeItem('kavach_dg');
   applyTheme(); render(); connect(); updSend();
   if (code) showRecovery(code);
